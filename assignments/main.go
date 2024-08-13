@@ -1,54 +1,114 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"math/rand"
+	"sort"
+	"time"
+)
 
 func main() {
 	fmt.Println("hello world")
 
-	// arraySign([]int{2, 1})                    // 1
-	// arraySign([]int{-2, 1})                   // -1
-	// arraySign([]int{-1, -2, -3, -4, 3, 2, 1}) // 1
+	fmt.Println(arraySign([]int{2, 1}))                    // 1
+	fmt.Println(arraySign([]int{-2, 1}))                   // -1
+	fmt.Println(arraySign([]int{-1, -2, -3, -4, 3, 2, 1})) // 1
 
-	// isAnagram("anak", "kana") // true
-	// isAnagram("anak", "mana") // false
-	// isAnagram("anagram", "managra") // true
+	fmt.Println(isAnagram("anak", "kana"))       // true
+	fmt.Println(isAnagram("anak", "mana"))       // false
+	fmt.Println(isAnagram("anagram", "managra")) // true
 
-	// findTheDifference("abcd", "abcde") // 'e'
-	// findTheDifference("abcd", "abced") // 'e'
-	// findTheDifference("", "y")         // 'y'
+	fmt.Println(string(findTheDifference("abcd", "abcde"))) // 'e'
+	fmt.Println(string(findTheDifference("abcd", "abced"))) // 'e'
+	fmt.Println(string(findTheDifference("", "y")))         // 'y'
 
-	// canMakeArithmeticProgression([]int{1, 5, 3})    // true; 1, 3, 5 adalah baris aritmatik +2
-	// canMakeArithmeticProgression([]int{5, 1, 9})    // true; 9, 5, 1 adalah baris aritmatik -4
-	// canMakeArithmeticProgression([]int{1, 2, 4, 8}) // false; 1, 2, 4, 8 bukan baris aritmatik, melainkan geometrik x2
+	fmt.Println(canMakeArithmeticProgression([]int{1, 5, 3}))    // true; 1, 3, 5 adalah baris aritmatik +2
+	fmt.Println(canMakeArithmeticProgression([]int{5, 1, 9}))    // true; 9, 5, 1 adalah baris aritmatik -4
+	fmt.Println(canMakeArithmeticProgression([]int{1, 2, 4, 8})) // false; 1, 2, 4, 8 bukan baris aritmatik, melainkan geometrik x2
 
-	// tesDeck()
+	tesDeck()
 }
 
 // https://leetcode.com/problems/sign-of-the-product-of-an-array
 func arraySign(nums []int) int {
 	// write code here
-
-	return 1 // if positive
-	// return -1 // if negative
+	sign := 1
+	for _, num := range nums {
+		if num == 0 {
+			return 0
+		} else if num < 0 {
+			sign = -sign
+		}
+	}
+	return sign
 }
 
 // https://leetcode.com/problems/valid-anagram
 func isAnagram(s string, t string) bool {
 	// write code here
-	return false
+
+	if len(s) != len(t) {
+		return false
+	}
+
+	newS := []byte(s)
+	newT := []byte(t)
+
+	sort.Slice(newS, func(i, j int) bool {
+		return newS[i] < newS[j]
+	})
+
+	sort.Slice(newT, func(i, j int) bool {
+		return newT[i] < newT[j]
+	})
+
+	for i := range newS {
+		if newS[i] != newT[i] {
+			return false
+		}
+	}
+
+	return true
 }
 
 // https://leetcode.com/problems/find-the-difference
 func findTheDifference(s string, t string) byte {
-	// write code here
-	b := byte('a')
-	return b
+	countS := make(map[byte]int)
+	countT := make(map[byte]int)
+
+	for i := range s {
+		countS[s[i]]++
+	}
+	for i := range t {
+		countT[t[i]]++
+	}
+
+	for char, count := range countT {
+		if countS[char] != count {
+			return char
+		}
+	}
+
+	return 0 // Just a fallback, theoretically not needed
 }
 
 // https://leetcode.com/problems/can-make-arithmetic-progression-from-sequence
 func canMakeArithmeticProgression(arr []int) bool {
-	// write code here
-	return false
+	if len(arr) < 2 {
+		return true
+	}
+
+	sort.Ints(arr)
+
+	diff := arr[1] - arr[0]
+
+	for i := 2; i < len(arr); i++ {
+		if arr[i]-arr[i-1] != diff {
+			return false
+		}
+	}
+
+	return true
 }
 
 // Deck represent "standard" deck consist of 52 cards
@@ -66,35 +126,54 @@ type Card struct {
 // [A Spade, 2 Spade,  ..., A Heart, 2 Heart, ..., J Diamond, Q Diamond, K Diamond ]
 // assume Ace-Spade on top of deck.
 func (d *Deck) New() {
-	// write code here
+	d.cards = []Card{}
+	for symbol := 0; symbol < 4; symbol++ {
+		for number := 1; number <= 13; number++ {
+			d.cards = append(d.cards, Card{symbol: symbol, number: number})
+		}
+	}
 }
 
 // PeekTop return n cards from the top
 func (d Deck) PeekTop(n int) []Card {
-	// write code here
-	return nil
+	if n > len(d.cards) {
+		n = len(d.cards)
+	}
+	return d.cards[:n]
 }
 
 // PeekTop return n cards from the bottom
 func (d Deck) PeekBottom(n int) []Card {
-	// write code here
-	return nil
+	if n > len(d.cards) {
+		n = len(d.cards)
+	}
+	return d.cards[len(d.cards)-n:]
 }
 
 // PeekCardAtIndex return a card at specified index
 func (d Deck) PeekCardAtIndex(idx int) Card {
+	if idx < 0 || idx >= len(d.cards) {
+		return Card{}
+	}
 	return d.cards[idx]
 }
 
 // Shuffle randomly shuffle the deck
 func (d *Deck) Shuffle() {
-	// write code here
+	rand.Seed(time.Now().UnixNano())
+	for i := len(d.cards) - 1; i > 0; i-- {
+		j := rand.Intn(i + 1)
+		d.cards[i], d.cards[j] = d.cards[j], d.cards[i]
+	}
 }
 
 // Cut perform single "Cut" technique. Move n top cards to bottom
 // e.g. Deck: [1, 2, 3, 4, 5]. Cut(3) resulting Deck: [4, 5, 1, 2, 3]
 func (d *Deck) Cut(n int) {
-	// write code here
+	if n > len(d.cards) {
+		n = len(d.cards)
+	}
+	d.cards = append(d.cards[n:], d.cards[:n]...)
 }
 
 func (c Card) ToString() string {
@@ -119,25 +198,25 @@ func tesDeck() {
 	deck := Deck{}
 	deck.New()
 
-	top5Cards := deck.PeekTop(3)
+	top5Cards := deck.PeekTop(5)
+	fmt.Println("=========")
 	for _, c := range top5Cards {
 		fmt.Println(c.ToString())
 	}
-	fmt.Println("---\n")
+	fmt.Println("--- PeekCardAtIndex ---")
+	fmt.Println(deck.PeekCardAtIndex(12).ToString()) // King Spade
+	fmt.Println(deck.PeekCardAtIndex(13).ToString()) // Ace Heart
+	fmt.Println(deck.PeekCardAtIndex(14).ToString()) // 2 Heart
+	fmt.Println(deck.PeekCardAtIndex(15).ToString()) // 3 Heart
 
-	fmt.Println(deck.PeekCardAtIndex(12).ToString()) // Queen Spade
-	fmt.Println(deck.PeekCardAtIndex(13).ToString()) // King Spade
-	fmt.Println(deck.PeekCardAtIndex(14).ToString()) // Ace Heart
-	fmt.Println(deck.PeekCardAtIndex(15).ToString()) // 2 Heart
-	fmt.Println("---\n")
-
+	fmt.Println("--- Shuffle ---")
 	deck.Shuffle()
-	top5Cards = deck.PeekTop(10)
+	top5Cards = deck.PeekTop(5)
 	for _, c := range top5Cards {
 		fmt.Println(c.ToString())
 	}
 
-	fmt.Println("---\n")
+	fmt.Println("===============")
 	deck.New()
 	deck.Cut(5)
 	bottomCards := deck.PeekBottom(10)
